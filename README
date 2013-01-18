@@ -8,7 +8,7 @@ Changes Log from doctrine version 1.2.1
 -------
 [DC-911](http://www.doctrine-project.org/jira/browse/DC-911) added the Doctrine_Core::modelLoaded. Checks if a model exists in the _loadedModelFiles
 [DC-912](http://www.doctrine-project.org/jira/browse/DC-912) For my project I needed to be able to reassign connections to models when they are autoloaded – this had to be able to happen during a conservative model loading process before the models had been instantiated. My solution was to build in a hook to a "autoloadSetUp" method which can be attached to any model (or class that is the base for a model). Attach a static method to any model you create called autoloadSetUp. All our models extend a class that detects the appropriate connection the that model should be attached too. Here is an example of how we use it to bind our models to different conections:
-```
+
 abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
 {
 	/**
@@ -20,10 +20,9 @@ abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
 		$newConnName = self::findRightConnection();
 		Doctrine_Manager::getInstance()->bindComponent($className, $newConnName);
 	}
-```
+
 [DC-910](http://www.doctrine-project.org/jira/browse/DC-910) Fixed: When subqueries are used in the on part of a join clause the Doctrine_Query_JoinCondition class does not always create the proper sql. For instance when there are 2 subqueries used in a between doctrine tries to parse the statement as 1 subquery rather 2 subqueries with an "and". I also fixed an issue where "(SQL:" syntax was breaking the join as well.
 [DC-920](http://www.doctrine-project.org/jira/browse/DC-920) I discovered that I could greatly optimize some of the queries that were being run through our system by adding a STRAIGHT_JOIN keyword to the front of the select. I added a feature to doctrine which allows me to inject sql into the query in the right place to enable features such as "STRAIGHT_JOIN". Example.
-```
 	public function testBeforeBodySelectNoneDQL() 
     {
         $q = new Doctrine_Query();
@@ -33,9 +32,7 @@ abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
         $this->assertEqual($q->getSqlQuery(), "SELECT DISTINCT STRAIGHT_JOIN e.id AS e__id, e.name AS e__name, p.id AS p__id FROM entity e LEFT JOIN phonenumber p ON (p.phonenumber = '123 123') WHERE (e.type = 0)");
         $this->assertEqual($q->getDql(), "SELECT DISTINCT STRAIGHT_JOIN u.name, p.id FROM User u LEFT JOIN u.Phonenumber p ON (p.phonenumber = '123 123')");
 	}
-```
 [DC-921](http://www.doctrine-project.org/jira/browse/DC-921) I figured it would be handy to have a WITH ROLLUP be add able to the group by clause. Example:
-```
 	public function testAggregateValueMappingSupportsLeftJoinsWithRollUp()
     {
         $q = new Doctrine_Query();
@@ -44,7 +41,6 @@ abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
 		$q->setWithRollUp(true);
         $this->assertEqual($q->getSqlQuery(), 'SELECT e.id AS e__id, e.name AS e__name, e.loginname AS e__loginname, e.password AS e__password, e.type AS e__type, e.created AS e__created, e.updated AS e__updated, e.email_id AS e__email_id, p.id AS p__id, p.phonenumber AS p__phonenumber, p.entity_id AS p__entity_id, MAX(e.name) AS e__0 FROM entity e LEFT JOIN phonenumber p ON e.id = p.entity_id WHERE (e.type = 0) GROUP BY e.id WITH ROLLUP');
     }
-```
 [DC-754](http://www.doctrine-project.org/jira/browse/DC-754) Fixed: When you include a dot in a string in your select statement the function getExpressionOwner in Doctrine_Query fires and considers that the text appearing before the dot in the string is the name of a class. There for it attempts to extract a short alias out of it.
 [DC-937](http://www.doctrine-project.org/jira/browse/DC-937) Fixed: When you call a stored procedure from a schema other than that of the current connection: [schema_name].[stored_procedure_name]([stored_procedure_arguments]) doctrine miss understands the string and throws a "Couldn't get short alias for" exception.
 [DC-1010](http://www.doctrine-project.org/jira/browse/DC-1010) Fixed: When putting a subquery in the where clause which includes a join and a limit the limit subquery algorithm mistakenly modifies the subquery
