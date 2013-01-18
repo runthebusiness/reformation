@@ -1,22 +1,22 @@
 reformation
 -------
-[DC-911](http://www.doctrine-project.org/jira/browse/DC-911) added the Doctrine_Core::modelLoaded. Checks if a model exists in the _loadedModelFiles
-[DC-912](http://www.doctrine-project.org/jira/browse/DC-912) For my project I needed to be able to reassign connections to models when they are autoloaded – this had to be able to happen during a conservative model loading process before the models had been instantiated. My solution was to build in a hook to a "autoloadSetUp" method which can be attached to any model (or class that is the base for a model). Attach a static method to any model you create called autoloadSetUp. All our models extend a class that detects the appropriate connection the that model should be attached too. Here is an example of how we use it to bind our models to different conections:
-
-abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
-{
-	/**
-	 * a static function I have patched doctrine to recognize. In this case it is used to rebind the component when a autload occures
-	 */
-	static public function autoloadSetUp()
+[DC-911](http://www.doctrine-project.org/jira/browse/DC-911): added the Doctrine_Core::modelLoaded. Checks if a model exists in the _loadedModelFiles
+[DC-912](http://www.doctrine-project.org/jira/browse/DC-912): For my project I needed to be able to reassign connections to models when they are autoloaded – this had to be able to happen during a conservative model loading process before the models had been instantiated. My solution was to build in a hook to a "autoloadSetUp" method which can be attached to any model (or class that is the base for a model). Attach a static method to any model you create called autoloadSetUp. All our models extend a class that detects the appropriate connection the that model should be attached too. Here is an example of how we use it to bind our models to different conections:
+	abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
 	{
-		$className = get_called_class();
-		$newConnName = self::findRightConnection();
-		Doctrine_Manager::getInstance()->bindComponent($className, $newConnName);
-	}
+		/**
+		 * a static function I have patched doctrine to recognize. In this case it is used to rebind the component when a autload occures
+		 */
+		static public function autoloadSetUp()
+		{
+			$className = get_called_class();
+			$newConnName = self::findRightConnection();
+			Doctrine_Manager::getInstance()->bindComponent($className, $newConnName);
+		}
 
-[DC-910](http://www.doctrine-project.org/jira/browse/DC-910) Fixed: When subqueries are used in the on part of a join clause the Doctrine_Query_JoinCondition class does not always create the proper sql. For instance when there are 2 subqueries used in a between doctrine tries to parse the statement as 1 subquery rather 2 subqueries with an "and". I also fixed an issue where "(SQL:" syntax was breaking the join as well.
-[DC-920](http://www.doctrine-project.org/jira/browse/DC-920) I discovered that I could greatly optimize some of the queries that were being run through our system by adding a STRAIGHT_JOIN keyword to the front of the select. I added a feature to doctrine which allows me to inject sql into the query in the right place to enable features such as "STRAIGHT_JOIN". Example.
+[DC-910](http://www.doctrine-project.org/jira/browse/DC-910): Fixed: When subqueries are used in the on part of a join clause the Doctrine_Query_JoinCondition class does not always create the proper sql. For instance when there are 2 subqueries used in a between doctrine tries to parse the statement as 1 subquery rather 2 subqueries with an "and". I also fixed an issue where "(SQL:" syntax was breaking the join as well.
+[DC-920](http://www.doctrine-project.org/jira/browse/DC-920): I discovered that I could greatly optimize some of the queries that were being run through our system by adding a STRAIGHT_JOIN keyword to the front of the select. I added a feature to doctrine which allows me to inject sql into the query in the right place to enable features such as "STRAIGHT_JOIN". Example.
+
 	public function testBeforeBodySelectNoneDQL() 
     {
         $q = new Doctrine_Query();
@@ -26,7 +26,8 @@ abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
         $this->assertEqual($q->getSqlQuery(), "SELECT DISTINCT STRAIGHT_JOIN e.id AS e__id, e.name AS e__name, p.id AS p__id FROM entity e LEFT JOIN phonenumber p ON (p.phonenumber = '123 123') WHERE (e.type = 0)");
         $this->assertEqual($q->getDql(), "SELECT DISTINCT STRAIGHT_JOIN u.name, p.id FROM User u LEFT JOIN u.Phonenumber p ON (p.phonenumber = '123 123')");
 	}
-[DC-921](http://www.doctrine-project.org/jira/browse/DC-921) I figured it would be handy to have a WITH ROLLUP be add able to the group by clause. Example:
+
+[DC-921](http://www.doctrine-project.org/jira/browse/DC-921): I figured it would be handy to have a WITH ROLLUP be add able to the group by clause. Example:
 	public function testAggregateValueMappingSupportsLeftJoinsWithRollUp()
     {
         $q = new Doctrine_Query();
@@ -35,21 +36,22 @@ abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
 		$q->setWithRollUp(true);
         $this->assertEqual($q->getSqlQuery(), 'SELECT e.id AS e__id, e.name AS e__name, e.loginname AS e__loginname, e.password AS e__password, e.type AS e__type, e.created AS e__created, e.updated AS e__updated, e.email_id AS e__email_id, p.id AS p__id, p.phonenumber AS p__phonenumber, p.entity_id AS p__entity_id, MAX(e.name) AS e__0 FROM entity e LEFT JOIN phonenumber p ON e.id = p.entity_id WHERE (e.type = 0) GROUP BY e.id WITH ROLLUP');
     }
-[DC-754](http://www.doctrine-project.org/jira/browse/DC-754) Fixed: When you include a dot in a string in your select statement the function getExpressionOwner in Doctrine_Query fires and considers that the text appearing before the dot in the string is the name of a class. There for it attempts to extract a short alias out of it.
-[DC-937](http://www.doctrine-project.org/jira/browse/DC-937) Fixed: When you call a stored procedure from a schema other than that of the current connection: [schema_name].[stored_procedure_name]([stored_procedure_arguments]) doctrine miss understands the string and throws a "Couldn't get short alias for" exception.
-[DC-1010](http://www.doctrine-project.org/jira/browse/DC-1010) Fixed: When putting a subquery in the where clause which includes a join and a limit the limit subquery algorithm mistakenly modifies the subquery
-[issue 1](https://github.com/runthebusiness/reformation/issues/1) added Doctrine_Manager::getDisabledValidators, Doctrine_Manager::getDisabledValidator, Doctrine_Manager::setDisabledValidators, methods. This was origenally to deal with this bug but is useful for many other things: Reformation: Unique Fields throw an error if you use replace
-[issue 2](https://github.com/runthebusiness/reformation/issues/2) Fixed: Subqueries can over write the $this->_queryComponents[$componentAlias]['agg'] settings for a query
-[issue 3](https://github.com/runthebusiness/reformation/issues/3) Fixed: If you have a where with 2 subqueries in it doctrine can't parse it
-[issue 4](https://github.com/runthebusiness/reformation/issues/4) Fixed: Add a inTransaction method to connection
-[issue 5](https://github.com/runthebusiness/reformation/issues/5) Fixed: Non Contiguous Migrations are not suported
-[issue 6](https://github.com/runthebusiness/reformation/issues/6) Fixed: Allow getSqlQuery to use query cache the same way running actual queries work. Added methods: Doctrine_Query::getSqlQueryCachable
-[issue 10](https://github.com/runthebusiness/reformation/issues/10) Fixed: Change the table class to throw its exception to instead of hiding the cause of the error
-[issue 11](https://github.com/runthebusiness/reformation/issues/11) Fixed: Change Doctrine_Hydrator_TransparentDriver to PDO::FETCH_ASSOC
-[issue 12](https://github.com/runthebusiness/reformation/issues/12) Fixed: Option to speed optimize the method by which query cache works, add methods: Doctrine_Query::setFastQueryCache, Doctrine_Query::getFastQueryCache, should be used in tandum with setSimpleSqlAlias option
-[issue 13](https://github.com/runthebusiness/reformation/issues/13) Fixed: Added simpleSqlAlias option, This option simplifies the way that aliases are generated in queries. This can provide a speed boost to query sql generation. Add methods: Doctrine_Query::setSimpleSqlAlias and Doctrine_Query::getSimpleSqlAlias
-[issue 14](https://github.com/runthebusiness/reformation/issues/14) Fixed: Add Doctrine_Hydrator_TransparentDriver,Added transparent Doctrine_Hydrator_TransparentDriver. A driver that lets record sets be hydrated as a simple assoc array with the mysql alias names taken directly from the query. Use together with simpleSqlAlias functionality.
-[issue 15](https://github.com/runthebusiness/reformation/issues/15) Fixed: Add legacy mode option so reformation functionality need not be enforced, Add Doctrine_Core::setLegacyMode and Doctrine_Core::getLegacyMode and then put hooks in the code for it.
+
+[DC-754](http://www.doctrine-project.org/jira/browse/DC-754): Fixed: When you include a dot in a string in your select statement the function getExpressionOwner in Doctrine_Query fires and considers that the text appearing before the dot in the string is the name of a class. There for it attempts to extract a short alias out of it.
+[DC-937](http://www.doctrine-project.org/jira/browse/DC-937): Fixed: When you call a stored procedure from a schema other than that of the current connection: [schema_name].[stored_procedure_name]([stored_procedure_arguments]) doctrine miss understands the string and throws a "Couldn't get short alias for" exception.
+[DC-1010](http://www.doctrine-project.org/jira/browse/DC-1010): Fixed: When putting a subquery in the where clause which includes a join and a limit the limit subquery algorithm mistakenly modifies the subquery
+[issue 1](https://github.com/runthebusiness/reformation/issues/1): added Doctrine_Manager::getDisabledValidators, Doctrine_Manager::getDisabledValidator, Doctrine_Manager::setDisabledValidators, methods. This was origenally to deal with this bug but is useful for many other things: Reformation: Unique Fields throw an error if you use replace
+[issue 2](https://github.com/runthebusiness/reformation/issues/2): Fixed: Subqueries can over write the $this->_queryComponents[$componentAlias]['agg'] settings for a query
+[issue 3](https://github.com/runthebusiness/reformation/issues/3): Fixed: If you have a where with 2 subqueries in it doctrine can't parse it
+[issue 4](https://github.com/runthebusiness/reformation/issues/4): Fixed: Add a inTransaction method to connection
+[issue 5](https://github.com/runthebusiness/reformation/issues/5): Fixed: Non Contiguous Migrations are not suported
+[issue 6](https://github.com/runthebusiness/reformation/issues/6): Fixed: Allow getSqlQuery to use query cache the same way running actual queries work. Added methods: Doctrine_Query::getSqlQueryCachable
+[issue 10](https://github.com/runthebusiness/reformation/issues/10): Fixed: Change the table class to throw its exception to instead of hiding the cause of the error
+[issue 11](https://github.com/runthebusiness/reformation/issues/11): Fixed: Change Doctrine_Hydrator_TransparentDriver to PDO::FETCH_ASSOC
+[issue 12](https://github.com/runthebusiness/reformation/issues/12): Fixed: Option to speed optimize the method by which query cache works, add methods: Doctrine_Query::setFastQueryCache, Doctrine_Query::getFastQueryCache, should be used in tandum with setSimpleSqlAlias option
+[issue 13](https://github.com/runthebusiness/reformation/issues/13): Fixed: Added simpleSqlAlias option, This option simplifies the way that aliases are generated in queries. This can provide a speed boost to query sql generation. Add methods: Doctrine_Query::setSimpleSqlAlias and Doctrine_Query::getSimpleSqlAlias
+[issue 14](https://github.com/runthebusiness/reformation/issues/14): Fixed: Add Doctrine_Hydrator_TransparentDriver,Added transparent Doctrine_Hydrator_TransparentDriver. A driver that lets record sets be hydrated as a simple assoc array with the mysql alias names taken directly from the query. Use together with simpleSqlAlias functionality.
+[issue 15](https://github.com/runthebusiness/reformation/issues/15): Fixed: Add legacy mode option so reformation functionality need not be enforced, Add Doctrine_Core::setLegacyMode and Doctrine_Core::getLegacyMode and then put hooks in the code for it.
 
 1.2.1
 -----
