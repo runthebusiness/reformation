@@ -23,7 +23,7 @@ abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
  ```
 [DC-910](http://www.doctrine-project.org/jira/browse/DC-910) Fixed: When subqueries are used in the on part of a join clause the Doctrine_Query_JoinCondition class does not always create the proper sql. For instance when there are 2 subqueries used in a between doctrine tries to parse the statement as 1 subquery rather 2 subqueries with an "and". I also fixed an issue where "(SQL:" syntax was breaking the join as well.
 [DC-920](http://www.doctrine-project.org/jira/browse/DC-920) I discovered that I could greatly optimize some of the queries that were being run through our system by adding a STRAIGHT_JOIN keyword to the front of the select. I added a feature to doctrine which allows me to inject sql into the query in the right place to enable features such as "STRAIGHT_JOIN". Example.
- ```php
+ ```javascript
 	public function testBeforeBodySelectNoneDQL() 
     {
         $q = new Doctrine_Query();
