@@ -8,7 +8,7 @@ Changes Log from doctrine version 1.2.1
 -------
 [DC-911](http://www.doctrine-project.org/jira/browse/DC-911) added the Doctrine_Core::modelLoaded. Checks if a model exists in the _loadedModelFiles
 [DC-912](http://www.doctrine-project.org/jira/browse/DC-912) For my project I needed to be able to reassign connections to models when they are autoloaded – this had to be able to happen during a conservative model loading process before the models had been instantiated. My solution was to build in a hook to a "autoloadSetUp" method which can be attached to any model (or class that is the base for a model). Attach a static method to any model you create called autoloadSetUp. All our models extend a class that detects the appropriate connection the that model should be attached too. Here is an example of how we use it to bind our models to different conections:
- ```
+ ```php
 abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
 {
 	/**
@@ -23,7 +23,7 @@ abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
  ```
 [DC-910](http://www.doctrine-project.org/jira/browse/DC-910) Fixed: When subqueries are used in the on part of a join clause the Doctrine_Query_JoinCondition class does not always create the proper sql. For instance when there are 2 subqueries used in a between doctrine tries to parse the statement as 1 subquery rather 2 subqueries with an "and". I also fixed an issue where "(SQL:" syntax was breaking the join as well.
 [DC-920](http://www.doctrine-project.org/jira/browse/DC-920) I discovered that I could greatly optimize some of the queries that were being run through our system by adding a STRAIGHT_JOIN keyword to the front of the select. I added a feature to doctrine which allows me to inject sql into the query in the right place to enable features such as "STRAIGHT_JOIN". Example.
- ```
+ ```php
 	public function testBeforeBodySelectNoneDQL() 
     {
         $q = new Doctrine_Query();
@@ -35,7 +35,7 @@ abstract class Doctrine_Record_AccountBinding extends Doctrine_Record
 	}
  ```
 [DC-921](http://www.doctrine-project.org/jira/browse/DC-921) I figured it would be handy to have a WITH ROLLUP be add able to the group by clause. Example:
- ```
+ ```php
 	public function testAggregateValueMappingSupportsLeftJoinsWithRollUp()
     {
         $q = new Doctrine_Query();
